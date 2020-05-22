@@ -5,6 +5,12 @@ const sharp = require('sharp');
 
 const app = express();
 
+app.head('/uploads/:image', (req, res) => {
+    fs.access(path.join(__dirname, 'uploads', req.params.image), fs.constants.R_OK, (err) => {
+        res.status(err ? 404 : 200).end();
+    });
+});
+
 app.post('/uploads/:image', express.raw({
     limit: '10mb',
     type: 'image/*'
@@ -21,8 +27,8 @@ app.post('/uploads/:image', express.raw({
     fileDirectory.end();
     fileDirectory.on('close', () => {
         res.send({ status: 'ok', size: imageSize });
-    })
-})
+    });
+});
 
 app.get(/\/thumbnail\.(jpg|png)/, (req, res, next) => {
     let format = (req.params[0] === 'png' ? 'png' : 'jpeg');
@@ -86,5 +92,4 @@ app.get(/\/thumbnail\.(jpg|png)/, (req, res, next) => {
 
 app.listen(3000, () => {
     console.log('******server is up********');
-
-})
+});
