@@ -5,8 +5,20 @@ const sharp = require('sharp');
 
 const app = express();
 
+app.param('image', (req, res, next, image) => {
+    if(!image.match(/\.(png|jpg|jpeg)$/i)) {
+        return res
+        .status(req.method === 'POST' ? 403 : 400)
+        .send({ status: 'error', reason: 'unsupported image type' });
+    }
+    req.image = image;
+    req.localImagePath = path.join(__dirname, 'uploads', req.image);
+
+    return next();
+});
+
 app.head('/uploads/:image', (req, res) => {
-    fs.access(path.join(__dirname, 'uploads', req.params.image), fs.constants.R_OK, (err) => {
+    fs.access(req.localImagePath, fs.constants.R_OK, (err) => {
         res.status(err ? 404 : 200).end();
     });
 });
@@ -15,18 +27,12 @@ app.post('/uploads/:image', express.raw({
     limit: '10mb',
     type: 'image/*'
 }), (req, res) => {
-    let image = req.params.image.toLowerCase();
+    let fileData = fs.createWriteStream(req.localImagePath, { flags: 'w+', encoding: 'binary' });
 
-    if (!image.match(/\.(jpg|jpeg|png)$/)) {
-        return res.status(403).send({ status: 'error', reason: 'unsupported image type' });
-    }
-
-    let imageSize = req.body.length;
-    let fileData = fs.createWriteStream(path.join(__dirname, 'uploads', image), { flags: 'w+', encoding: 'binary' });
     fileData.write(req.body);
     fileData.end();
     fileData.on('close', () => {
-        res.send({ status: 'ok', size: imageSize });
+        res.send({ status: 'ok', size: req.body.length });
     });
 });
 
@@ -91,26 +97,12 @@ app.get(/\/thumbnail\.(jpg|png)/, (req, res, next) => {
 });
 
 app.get('/uploads/:image', (req, res) => {
-    let extension = path.extname(req.params.image);
-    if (!extension.match(/^\.(png|jpg|jpeg)$/)) {
-        return res.status(400).end();
-    }
-
-    let fileData = fs.createReadStream(path.join(__dirname, 'uploads', req.params.image));
+    let fileData = fs.createReadStream(req.localImagePath);
     fileData.on('error', (err) => {
-        if (err.code === 'ENOENT') {
-            res.status(404);
-
-            if (req.accepts('html')) {
-                res.setHeader('Content-Type', 'text/html');
-                res.write('<strong>Image not found</strong>')
-            }
-            res.end();
-        }
-        res.status(500).end();
+        res.status(err.code === 'ENOENT' ? 404 : 500).end();
     })
 
-    res.setHeader('Content-Type', 'image/' + extension.substr(1));
+    res.setHeader('Content-Type', 'image/' + path.extname(req.image).substr(1));
     fileData.pipe(res);
 })
 
