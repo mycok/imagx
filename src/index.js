@@ -22,10 +22,10 @@ app.post('/uploads/:image', express.raw({
     }
 
     let imageSize = req.body.length;
-    let fileDirectory = fs.createWriteStream(path.join(__dirname, 'uploads', image), { flags: 'w+', encoding: 'binary' });
-    fileDirectory.write(req.body);
-    fileDirectory.end();
-    fileDirectory.on('close', () => {
+    let fileData = fs.createWriteStream(path.join(__dirname, 'uploads', image), { flags: 'w+', encoding: 'binary' });
+    fileData.write(req.body);
+    fileData.end();
+    fileData.on('close', () => {
         res.send({ status: 'ok', size: imageSize });
     });
 });
@@ -89,6 +89,30 @@ app.get(/\/thumbnail\.(jpg|png)/, (req, res, next) => {
 
     image.composite([{ input: thumbnail }]).toFormat(format).pipe(res);
 });
+
+app.get('/uploads/:image', (req, res) => {
+    let extension = path.extname(req.params.image);
+    if (!extension.match(/^\.(png|jpg|jpeg)$/)) {
+        return res.status(400).end();
+    }
+
+    let fileData = fs.createReadStream(path.join(__dirname, 'uploads', req.params.image));
+    fileData.on('error', (err) => {
+        if (err.code === 'ENOENT') {
+            res.status(404);
+
+            if (req.accepts('html')) {
+                res.setHeader('Content-Type', 'text/html');
+                res.write('<strong>Image not found</strong>')
+            }
+            res.end();
+        }
+        res.status(500).end();
+    })
+
+    res.setHeader('Content-Type', 'image/' + extension.substr(1));
+    fileData.pipe(res);
+})
 
 app.listen(3000, () => {
     console.log('******server is up********');
