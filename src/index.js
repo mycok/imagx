@@ -17,6 +17,33 @@ app.param('image', (req, res, next, image) => {
     return next();
 });
 
+app.param('width', (req, res, next, width) => {
+    req.width = +width;
+    return next();
+});
+
+app.param('height', (req, res, next, height) => {
+    req.height = +height;
+    return next();
+});
+
+function downloadImage(req, res) {
+    fs.access(req.localImagePath, fs.constants.R_OK, (err) => {
+        if (err) return res.status(404).end();
+
+        let image = sharp(req.localImagePath);
+        if(req.width && req.height) {
+            image.resize(req.width, req.height, { fit: 'fill' })
+        }
+        if(req.width || req.height) {
+            image.resize(req.width, req.height);
+        }
+
+        res.setHeader('Content-Type', 'image/' + path.extname(req.image).substr(1));
+        image.pipe(res);
+    });
+};
+
 app.head('/uploads/:image', (req, res) => {
     fs.access(req.localImagePath, fs.constants.R_OK, (err) => {
         res.status(err ? 404 : 200).end();
@@ -96,15 +123,10 @@ app.get(/\/thumbnail\.(jpg|png)/, (req, res, next) => {
     image.composite([{ input: thumbnail }]).toFormat(format).pipe(res);
 });
 
-app.get('/uploads/:image', (req, res) => {
-    let fileData = fs.createReadStream(req.localImagePath);
-    fileData.on('error', (err) => {
-        res.status(err.code === 'ENOENT' ? 404 : 500).end();
-    })
-
-    res.setHeader('Content-Type', 'image/' + path.extname(req.image).substr(1));
-    fileData.pipe(res);
-})
+app.get('/uploads/:width(\\d+)x:height(\\d+)-:image', downloadImage);
+app.get('/uploads/_x:height(\\d+)-:image', downloadImage);
+app.get('/uploads/:width(\\d+)x_-:image', downloadImage);
+app.get('/uploads/:image',downloadImage);
 
 app.listen(3000, () => {
     console.log('******server is up********');
