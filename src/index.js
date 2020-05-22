@@ -1,7 +1,29 @@
+const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const sharp = require('sharp');
 
 const app = express();
+
+app.post('/uploads/:image', express.raw({
+    limit: '10mb',
+    type: 'image/*'
+}), (req, res) => {
+    let image = req.params.image.toLowerCase();
+
+    if (!image.match(/\.(jpg|jpeg|png)$/)) {
+        return res.status(403).send({ status: 'error', reason: 'unsupported image type' });
+    }
+
+    let imageSize = req.body.length;
+    let fileDirectory = fs.createWriteStream(path.join(__dirname, 'uploads', image), { flags: 'w+', encoding: 'binary' });
+    fileDirectory.write(req.body);
+    fileDirectory.end();
+    fileDirectory.on('close', () => {
+        res.send({ status: 'ok', size: imageSize });
+    })
+})
+
 app.get(/\/thumbnail\.(jpg|png)/, (req, res, next) => {
     let format = (req.params[0] === 'png' ? 'png' : 'jpeg');
 
