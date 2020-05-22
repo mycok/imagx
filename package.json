@@ -1,0 +1,29 @@
+{
+  "name": "imagx",
+  "version": "1.0.0",
+  "description": "image processing app",
+  "main": "index.js",
+  "scripts": {
+    "test": "test",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mycok/imagx.git"
+  },
+  "keywords": [
+    "Node",
+    "Express",
+    "Micro-services"
+  ],
+  "author": "mycok",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mycok/imagx/issues"
+  },
+  "homepage": "https://github.com/mycok/imagx#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "sharp": "^0.25.3"
+  }
+}
