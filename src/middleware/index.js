@@ -10,8 +10,13 @@ function downloadImage(req, res) {
         if(req?.width && req?.height) {
             image.resize(req.width, req.height, { fit: 'fill' })
         }
+
         if(req?.width || req?.height) {
             image.resize(req.width, req.height);
+        }
+        
+        if (req.greyscale){
+            image.greyscale();
         }
 
         res.setHeader('Content-Type', 'image/' + path.extname(req.image).substr(1));
