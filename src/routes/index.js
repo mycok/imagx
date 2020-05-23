@@ -115,13 +115,6 @@ router.get(/\/thumbnail\.(jpg|png)/, (req, res, next) => {
     image.composite([{ input: thumbnail }]).toFormat(format).pipe(res);
 });
 
-router.get('/uploads/:width(\\d+)x:height(\\d+)-:greyscale-:image', downloadImage);
-router.get('/uploads/:width(\\d+)x:height(\\d+)-:image', downloadImage);
-router.get('/uploads/_x:height(\\d+)-:greyscale-:image', downloadImage);
-router.get('/uploads/_x:height(\\d+)-:image', downloadImage);
-router.get('/uploads/:width(\\d+)x_-:greyscale-:image', downloadImage);
-router.get('/uploads/:width(\\d+)x_-:image', downloadImage);
-router.get('/uploads/:greyscale-:image', downloadImage);
 router.get('/uploads/:image',downloadImage);
 
 module.exports = { router };
