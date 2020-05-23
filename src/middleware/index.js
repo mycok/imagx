@@ -7,9 +7,14 @@ function downloadImage(req, res) {
         if (err) return res.status(404).end();
 
         const image = sharp(req.localImagePath);
+        const queryBooleans = ['y', 'yes', '1', 'on'];
         const width = +req?.query?.width;
         const height = +req?.query?.height;
-        const greyscale = (['y', 'yes', '1'].includes(req?.query?.greyscale));
+        const blur = +req.query?.blur;
+        const sharpen = +req.query?.sharpen;
+        const greyscale = (queryBooleans.includes(req?.query?.greyscale));
+        const flip = (queryBooleans.includes(req?.query?.flip));
+        const flop = (queryBooleans.includes(req?.query?.flop));
 
         if (width > 0 && height > 0) {
             image.resize(req.width, req.height, { fit: 'fill' });
@@ -22,6 +27,17 @@ function downloadImage(req, res) {
         if (greyscale){
             image.greyscale();
         }
+
+        if (blur > 0) {
+            image.blur(blur);
+        }
+
+        if (sharp > 0) {
+            image.sharpen(sharpen);
+        }
+
+        if (flip) image.flip();
+        if (flop) image.flop();
 
         res.setHeader('Content-Type', `image/${path.extname(req.image).substr(1)}`);
         image.pipe(res);
