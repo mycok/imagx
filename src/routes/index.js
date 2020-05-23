@@ -29,6 +29,13 @@ router.param('height', (req, res, next, height) => {
     return next();
 });
 
+router.param('greyscale', (req, res, next, greyscale) => {
+    if (greyscale !== 'bw') return next('route');
+    req.greyscale = true;
+
+    return next();
+})
+
 router.head('/uploads/:image', (req, res) => {
     fs.access(req.localImagePath, fs.constants.R_OK, (err) => {
         res.status(err ? 404 : 200).end();
@@ -108,9 +115,13 @@ router.get(/\/thumbnail\.(jpg|png)/, (req, res, next) => {
     image.composite([{ input: thumbnail }]).toFormat(format).pipe(res);
 });
 
+router.get('/uploads/:width(\\d+)x:height(\\d+)-:greyscale-:image', downloadImage);
 router.get('/uploads/:width(\\d+)x:height(\\d+)-:image', downloadImage);
+router.get('/uploads/_x:height(\\d+)-:greyscale-:image', downloadImage);
 router.get('/uploads/_x:height(\\d+)-:image', downloadImage);
+router.get('/uploads/:width(\\d+)x_-:greyscale-:image', downloadImage);
 router.get('/uploads/:width(\\d+)x_-:image', downloadImage);
+router.get('/uploads/:greyscale-:image', downloadImage);
 router.get('/uploads/:image',downloadImage);
 
 module.exports = { router };
