@@ -6,20 +6,24 @@ function downloadImage(req, res) {
     fs.access(req.localImagePath, fs.constants.R_OK, (err) => {
         if (err) return res.status(404).end();
 
-        let image = sharp(req.localImagePath);
-        if(req?.width && req?.height) {
-            image.resize(req.width, req.height, { fit: 'fill' })
-        }
+        const image = sharp(req.localImagePath);
+        const width = +req?.query?.width;
+        const height = +req?.query?.height;
+        const greyscale = (['y', 'yes', '1'].includes(req?.query?.greyscale));
 
-        if(req?.width || req?.height) {
-            image.resize(req.width, req.height);
+        if (width > 0 && height > 0) {
+            image.resize(req.width, req.height, { fit: 'fill' });
+        };
+
+        if (width > 0 || height > 0) {
+            image.resize(width || null, height || null);
         }
         
-        if (req.greyscale){
+        if (greyscale){
             image.greyscale();
         }
 
-        res.setHeader('Content-Type', 'image/' + path.extname(req.image).substr(1));
+        res.setHeader('Content-Type', `image/${path.extname(req.image).substr(1)}`);
         image.pipe(res);
     });
 };
