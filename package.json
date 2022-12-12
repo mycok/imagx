@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/mycok/imagx#readme",
   "dependencies": {
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "sharp": "^0.25.3"
   }
 }
